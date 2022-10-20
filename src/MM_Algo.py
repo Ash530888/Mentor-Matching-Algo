@@ -149,7 +149,7 @@ def main(argv):
                 score+=1
 
 
-            # check mentor gender preference
+            # check mentor and mentee gender preferences
             if menteeData["mentorGender"].iloc[j] != "No preference" and  mentorData["menteeGender"].iloc[i] != "No preference":
                 if menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i] and menteeData["gender"].iloc[j] == mentorData["menteeGender"].iloc[i]:
                     score+=1
@@ -157,8 +157,12 @@ def main(argv):
                     score+=0.5
                 elif menteeData["gender"].iloc[j] == mentorData["menteeGender"].iloc[i]:
                     score+=0.5
+
+
+            # check QMUL School
+            if menteeData["dept"].iloc[j] == mentorData["QMULschool"]: score+=1
             
-            
+
 
             #if menteeData["fname"].iloc[j] == "Aishah":
             #    score = 1
