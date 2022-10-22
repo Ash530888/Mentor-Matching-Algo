@@ -3,6 +3,8 @@ import argparse
 import pandas as pd
 import math
 from Levenshtein import distance
+from job_scraper import find_jobs_from
+
 
 def levenshtein_distance_percentage(s1: str, s2: str) -> float:
     #Computes the Levenshtein dis
@@ -35,14 +37,14 @@ def main(argv):
 
 
     # Read excel sheets with 
-    columns = [3, 4, 6, 8, 10, 11, 17, 18, 29, 32, 33, 34, 39, 40, 41]
-    colNames = ["fname", "lname", "ID", "course", "dept", "faculty", "nationality", "gender", "bursary", "industry/job", "otherGender", "entrepreneurStage", "support", "mentorGender", "whichMentor"]
+    columns = [3, 4, 6, 8, 10, 11, 17, 18, 29, 30, 32, 33, 34, 39, 40, 41]
+    colNames = ["fname", "lname", "ID", "course", "dept", "faculty", "nationality", "gender", "bursary", "matchPref", "industry/job", "otherGender", "entrepreneurStage", "support", "mentorGender", "whichMentor"]
     #menteeData = pd.read_excel(filepath, sheet_name = mentee, header = None, names = columns)
     menteeData = pd.read_excel(menteeFile, header = None, usecols = columns, names = colNames)
     menteeData.drop(index=menteeData.index[0], axis=0, inplace=True)
 
-    columns = [0, 4, 5, 7, 11, 12, 14, 15, 16, 18, 20, 22, 23]
-    colNames = ["name", "gender", "otherGender", "qualifications", "ethnicitiy", "otherEthnic", "menteeGender", "otherMenteeGender", "QMULschool", "job", "industry", "support", "otherSupport"]
+    columns = [0, 4, 5, 7, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23]
+    colNames = ["name", "gender", "otherGender", "qualifications", "ethnicitiy", "otherEthnic", "menteeGender", "otherMenteeGender", "QMULschool", "matchPref", "job", "company", "industry", "support", "otherSupport"]
     #mentorData = pd.read_excel(filepath, sheet_name = mentor, header = None, names = columns)
     mentorData = pd.read_excel(mentorFile, header = None, usecols = columns, names = colNames)
     mentorData.drop(index=mentorData.index[0], axis=0, inplace=True)
@@ -73,12 +75,12 @@ def main(argv):
         columns.append(mentorName)
         columns.append("Matching Attributes")
 
-        mentorSupport = mentorData["support"].iloc[i]
+        mentorSupport = mentorData["support"].iloc[i].split(",")
 
         ranking = []
         # iterate through mentees
         for j in range(len(menteeData)):
-            menteeSupport = menteeData["support"].iloc[j]
+            menteeSupport = menteeData["support"].iloc[j].split(",")
             score = 0
             attributes = ""
 
@@ -93,83 +95,124 @@ def main(argv):
                 # remove numbers i.e. dates
                 mentorQualifications = [i for i in mentorQualifications if not i.isnumeric()]
 
-                found = False
                 for q in mentorQualifications:
                     s = levenshtein_distance_percentage(menteeData["course"].iloc[j], q)
                     if s>=0.55: 
                         score+=1
-                        if not found: attributes += "Qualifications, "
+                        attributes += "Qualifications; "
+                        break
+            # if mentee wants to be matched based on industry/job
+            if menteeData["whichMentor"].iloc[j] == "Option 2 - A mentor who works in the industry/job role that I am interested in":
+                stopWords = [",", ".", "/","or", "and"]
+                menteeJob = menteeData["industry/job"].iloc[j].split(" ")
+                menteeJob = [x for x in menteeJob if x.lower() not in stopWords]
+                mentorJob = mentorData["job"].iloc[j]
+                mentorIndustry = mentorData["industry"].iloc[j]
+                mentorCompany = mentorData["company"].iloc[j]
+
+                found = False
+
+                for x in menteeJob:
+                    jobs = find_jobs_from(x, "uk")
+
+                    titles = [y[1].upper() for y in jobs if y not in titles]
+                    companies = [y[0].upper() for y in jobs if y not in companies]
+                    
+                    if x.upper() in titles or mentorIndustry.upper() in titles:
+                        if mentorCompany in companies: 
+                            score+=0.5
+                            attributes+= "Company; "
+                        score+=1
+                        attributes+= "Job/Industry; "
                         found = True
+                        break
 
-            elif menteeData["whichMentor"].iloc[j] == "Option 2 - A mentor who works in the industry/job role that I am interested in":
-                industry = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["industry"].iloc[i])
-                job = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["job"].iloc[i])
+                    if found: break
 
-                if industry>=0.55: 
-                    score+=1
-                if job>=0.55: 
-                    score+=1
 
-            elif menteeData["whichMentor"].iloc[j] == "Option 3 - A mentor who can support with entrepreneurship":
+
+                #industry = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["industry"].iloc[i])
+                #job = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["job"].iloc[i])
+
+                #if industry>=0.55: 
+                #    score+=1
+                #    attributes += "Industry; "
+                #if job>=0.55: 
+                #    score+=1
+                #    attributes += "Job; "
+
+            # if mentee interested in entrepreneurship
+            if menteeData["whichMentor"].iloc[j] == "Option 3 - A mentor who can support with entrepreneurship":
                 if "Developing entrepreneurial skills" in menteeSupport and "Developing entrepreneurial skills" in mentorSupport:
                     score+=1
+                    attributes += "Developing Entrepreneurial Skills; "
 
                 if "Support with setting up or growing a business" in menteeSupport and "Support with setting up or growing a business" in mentorSupport:
                     score+=1
-
-
-            # check if mentor and mentee industry/job interests match for mentees who didn't want to be matched on this aspect
-            # lower weighting
-            if menteeData["whichMentor"].iloc[j] != "Option 2 - A mentor who works in the industry/job role that I am interested in":
-                industry = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["industry"].iloc[i])
-                job = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["job"].iloc[i])
-
-                if industry>=0.55: 
+                    attributes += "Starting/Growing Business; "
+                
+                if (menteeData["entrepreneurStage"].iloc[j])[6] == "1":
                     score+=1
-                if job>=0.55: 
-                    score+=1
+                    attrubutes+="Exploring Entrepreneurship; "
+
+                elif (menteeData["entrepreneurStage"].iloc[j])[6] == "2":
+                    score+=2
+                    attrubutes+="Aspiring Entrepreneur with Business Idea; "
+
+                elif (menteeData["entrepreneurStage"].iloc[j])[6] == "3":
+                    score+=3
+                    attrubutes+="Current Entrepreneur; "
+
+
+            
             
             # compare mentee goals and mentor offerings
             if "Planning for the future and goal setting" in menteeSupport and "Planning for the future and goal setting" in mentorSupport:
                 score+=1
+                attributes += "Planning/Setting Goals; "
             if "Gaining insight to an industry/profession" in menteeSupport and "Gaining insight to an industry/profession" in mentorSupport:
                 # need to only add to score if industry/profession same
                 score+=1
+                attributes += "Industry Insight; "
             if "Building a professional network" in menteeSupport and "Building a professional network" in mentorSupport:
                 score+=1
+                attributes += "Networking; "
             if "Writing/improving CVs, job applications and covering letters" in menteeSupport and "Writing/improving CVs, job applications and covering letters" in mentorSupport:
                 score+=1
+                attributes += "CVs/Applications; "
             if "Interview practice and preparation" in menteeSupport and "Interview practice and preparation" in mentorSupport:
                 score+=1
+                attributes += "Interviews; "
             if "Finding work experience (shadowing/internships/part-time work)" in menteeSupport and "Finding work experience (shadowing/internships/part-time work)" in mentorSupport:
                 score+=1
-            if "Developing entrepreneurial skills" in menteeSupport and "Developing entrepreneurial skills" in mentorSupport:
-                score+=1
-            if "Support with setting up or growing a business" in menteeSupport and "Support with setting up or growing a business" in mentorSupport:
-                score+=1
+                attributes += "Shadowing/Internships/Work; "
 
 
             # check mentor and mentee gender preferences
             if menteeData["mentorGender"].iloc[j] != "No preference" and  mentorData["menteeGender"].iloc[i] != "No preference":
                 if menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i] and menteeData["gender"].iloc[j] == mentorData["menteeGender"].iloc[i]:
                     score+=1
+                    attributes += "Both Mentee and Mentor Gender Pref. Met; "
                 elif menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i]:
                     score+=0.5
+                    attributes += "Only Mentee Gender Pref. Met; "
                 elif menteeData["gender"].iloc[j] == mentorData["menteeGender"].iloc[i]:
                     score+=0.5
+                    attributes += "Only Mentor Gender Pref. Met; "
+            else:
+                if mentorData["menteeGender"].iloc[i] == "No preference" and menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i]:
+                    score+=1
+                    attributes += "Mentee Gender Pref. Met; "
+                elif menteeData["mentorGender"].iloc[j] == "No preference" and menteeData["gender"].iloc[j] == mentorData["menteeGender"].iloc[i]:
+                    score+=1
+                    attributes += "Mentor Gender Pref. Met; "
 
 
             # check QMUL School
             if menteeData["dept"].iloc[j] == mentorData["QMULschool"]: score+=1
+
+            # Compare Mentor's and Mentee's additional match preferences
             
-
-
-            #if menteeData["fname"].iloc[j] == "Aishah":
-            #    score = 1
-            #    attributes+="gender, industry, qualifications"
-            #    if math.isnan(menteeData["dept"].iloc[j]):
-            #        print("NaN found")
-            #        input()
 
 
             # name, attributes, score
