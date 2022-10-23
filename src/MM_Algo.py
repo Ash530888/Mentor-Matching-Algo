@@ -4,6 +4,10 @@ import pandas as pd
 import math
 from Levenshtein import distance
 from job_scraper import find_jobs_from
+import nltk
+nltk.download('punkt')
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 
 def levenshtein_distance_percentage(s1: str, s2: str) -> float:
@@ -51,21 +55,6 @@ def main(argv):
 
     columns = []
 
-    print(mentorData)
-    input()
-    print(mentorData["name"].iloc(0))
-    input()
-
-    #column "name", 0,0
-    print(mentorData["name"].iloc(0)[0])
-    print(mentorData["gender"].iloc(0)[0])
-    input()
-
-    # row
-    print(mentorData.iloc[1])
-    print(mentorData.iloc(0))
-    input()
-
     outputDF = {}
 
     # iterate through mentors
@@ -80,7 +69,7 @@ def main(argv):
         ranking = []
         # iterate through mentees
         for j in range(len(menteeData)):
-            menteeSupport = menteeData["support"].iloc[j].split(",")
+            menteeSupport = (menteeData["support"].iloc[j]).split(",")
             score = 0
             attributes = ""
 
@@ -91,7 +80,8 @@ def main(argv):
 
                 # mentor has list of qualifications which each need to be processed individually
                 # so split into list
-                mentorQualifications = mentorData["qualifications"].iloc[i].split(", ")
+                mentorQualifications = (mentorData["qualifications"].iloc[i]).split(", ")
+                input(mentorQualifications)
                 # remove numbers i.e. dates
                 mentorQualifications = [i for i in mentorQualifications if not i.isnumeric()]
 
@@ -103,8 +93,8 @@ def main(argv):
                         break
             # if mentee wants to be matched based on industry/job
             if menteeData["whichMentor"].iloc[j] == "Option 2 - A mentor who works in the industry/job role that I am interested in":
-                stopWords = [",", ".", "/","or", "and"]
-                menteeJob = menteeData["industry/job"].iloc[j].split(" ")
+                stopWords = [".", "/","or", "and"]
+                menteeJob = (menteeData["industry/job"].iloc[j]).split(",")
                 menteeJob = [x for x in menteeJob if x.lower() not in stopWords]
                 mentorJob = mentorData["job"].iloc[j]
                 mentorIndustry = mentorData["industry"].iloc[j]
@@ -113,12 +103,16 @@ def main(argv):
                 found = False
 
                 for x in menteeJob:
-                    jobs = find_jobs_from(x, "uk")
+                    print(x)
+                    jobs = find_jobs_from("CWjobs", x, "uk")
+
+                    titles = []
+                    companies = []
 
                     titles = [y[1].upper() for y in jobs if y not in titles]
                     companies = [y[0].upper() for y in jobs if y not in companies]
                     
-                    if x.upper() in titles or mentorIndustry.upper() in titles:
+                    if mentorJob.upper() in titles or mentorIndustry.upper() in titles:
                         if mentorCompany in companies: 
                             score+=0.5
                             attributes+= "Company; "
@@ -153,15 +147,15 @@ def main(argv):
                 
                 if (menteeData["entrepreneurStage"].iloc[j])[6] == "1":
                     score+=1
-                    attrubutes+="Exploring Entrepreneurship; "
+                    attributes+="Exploring Entrepreneurship; "
 
                 elif (menteeData["entrepreneurStage"].iloc[j])[6] == "2":
                     score+=2
-                    attrubutes+="Aspiring Entrepreneur with Business Idea; "
+                    attributes+="Aspiring Entrepreneur with Business Idea; "
 
                 elif (menteeData["entrepreneurStage"].iloc[j])[6] == "3":
                     score+=3
-                    attrubutes+="Current Entrepreneur; "
+                    attributes+="Current Entrepreneur; "
 
 
             
@@ -209,10 +203,27 @@ def main(argv):
 
 
             # check QMUL School
-            if menteeData["dept"].iloc[j] == mentorData["QMULschool"]: score+=1
+            if menteeData["dept"].iloc[j] == mentorData["QMULschool"].iloc[i]: score+=1
 
             # Compare Mentor's and Mentee's additional match preferences
+            #menteePref = menteeData["matchPref"].iloc[j]
+            #menteePref = word_tokenize(menteePref)
+            #menteePref = nltk.pos_tag(menteePref)
+            #menteePref = [x[0].upper() for x in menteePref if "VB" in x[1] or "NN" in x[1]]
             
+
+            #mentorPref = mentorData["matchPref"].iloc[i]
+            #mentorPref = word_tokenize(mentorPref)
+            #mentorPref = nltk.pos_tag(mentorPref)
+            #mentorPref = [x[0].upper() for x in mentorPref if "VB" in x[1] or "NN" in x[1]]
+
+            #attributeAdded = False
+            #for x in menteePref:
+            #    if x in mentorPref:
+            #        score+=0.25
+            #        if not attributeAdded: 
+            #            attribute+="Mentee/Mentor Other Pref.; "
+            #            attributeAdded = True
 
 
             # name, attributes, score
