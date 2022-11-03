@@ -444,13 +444,14 @@ def main(argv):
 
             # if mentee interested in entrepreneurship
             if menteeData["whichMentor"].iloc[j] == "Option 3 - A mentor who can support with entrepreneurship":
-                if "Developing entrepreneurial skills" in mentorSupport:
-                    score += 1
-                    attributes += "Developing Entrepreneurial Skills; "
+                if not isinstance(mentorSupport, float):
+                    if "Developing entrepreneurial skills" in mentorSupport:
+                        score += 1
+                        attributes += "Developing Entrepreneurial Skills; "
 
-                if "Support with setting up or growing a business" in mentorSupport:
-                    score += 1
-                    attributes += "Starting/Growing Business; "
+                    if "Support with setting up or growing a business" in mentorSupport:
+                        score += 1
+                        attributes += "Starting/Growing Business; "
                 
                 # list of keywords
                 # some spelt incorrectly to capture more variations of the word
