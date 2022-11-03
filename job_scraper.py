@@ -39,7 +39,14 @@ def find_jobs_from(website, job_title, location):
         location_of_driver = os.getcwd()
         driver = initiate_driver(location_of_driver, browser='chrome')
         job_soup = make_job_search(job_title, location, driver)
-        jobs_list, num_listings = extract_job_information_cwjobs(job_soup)
+        print("job_soup")
+        print(job_soup)
+        input()
+        jobs_list, num_listings = extract_job_information_cwjobs(job_soup, driver)
+
+    print("***************************************************************")
+    print(num_listings)
+        
 
     return jobs_list
     
@@ -54,11 +61,13 @@ def load_indeed_jobs_div(job_title, location):
     url = ('https://www.indeed.co.uk/jobs?' + urllib.parse.urlencode(getVars))
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
-    job_soup = soup.find(id="resultsCol")
-    return job_soup
+    return soup
 
 def extract_job_information_indeed(job_soup):
     job_elems = job_soup.find_all('div', class_='jobsearch-SerpJobCard')
+
+    print(job_elems)
+    input()
      
     cols = []
     extracted_info = []
@@ -115,7 +124,7 @@ def extract_date_indeed(job_elem):
 
 def initiate_driver(location_of_driver, browser):
     if browser == 'chrome':
-        driver = webdriver.Chrome(executable_path="/Users/Admin/Desktop/MyDocs/QMentoring algo/Mentor-Matching-Algo/src/chromedriver")
+        driver = webdriver.Chrome(executable_path=(location_of_driver + "/chromedriver"))
     elif browser == 'firefox':
         driver = webdriver.Firefox(executable_path=(location_of_driver + "/firefoxdriver"))
     elif browser == 'safari':
@@ -152,9 +161,13 @@ def make_job_search(job_title, location, driver):
     return job_soup
 
 
-def extract_job_information_cwjobs(job_soup):
-    
-    job_elems = job_soup.find_all('div', class_="job")
+def extract_job_information_cwjobs(job_soup, driver):
+    print(job_soup)
+    job_elems = job_soup.find_all('div', class_="Wrapper-sc-11673k2-0.eHVkAX")
+    print("***************************************************************")
+    print("job_elems")
+    print(job_elems)
+    input()
      
     cols = []
     extracted_info = []
@@ -162,6 +175,9 @@ def extract_job_information_cwjobs(job_soup):
     titles = []
     cols.append('titles')
     for job_elem in job_elems:
+        print("job_elem")
+        print(job_elem)
+        input()
         titles.append(extract_job_title_cwjobs(job_elem))
     extracted_info.append(titles) 
                         
