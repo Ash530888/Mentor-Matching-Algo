@@ -2,12 +2,7 @@ from operator import truediv
 import sys
 import argparse
 import pandas as pd
-import math
 from Levenshtein import distance
-import nltk
-nltk.download('punkt')
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 from csv import reader
 
 
@@ -365,27 +360,27 @@ def main(argv):
             menteePref = menteeData["matchPref"].iloc[j]
             mentorPref = mentorData["matchPref"].iloc[i]
 
-            if not isinstance(menteePref, float) and not isinstance(mentorPref, float):
-                stopwords = ["WANT", "LIKE", "PREFER", "ENJOY", "HAVE", "USE", "MATCHED", "WORK", "SPEAK"]
-                menteePref = word_tokenize(menteePref)
-                menteePref = nltk.pos_tag(menteePref)
+            #if not isinstance(menteePref, float) and not isinstance(mentorPref, float):
+            #    stopwords = ["WANT", "LIKE", "PREFER", "PREFERENCE", "INTEREST", "ENJOY", "HAVE", "USE", "MATCHED", "WORK", "SPEAK", "GOOD", "SOMEONE"]
+            #    menteePref = word_tokenize(menteePref)
+            #    menteePref = nltk.pos_tag(menteePref)
                 
-                menteePref = [x[0].upper() for x in menteePref if "JJ" in x[1] and x[0].upper() not in stopwords]
+            #    menteePref = [x[0].upper() for x in menteePref if ("NN" in x[1] and x[0].upper() not in stopwords) or ("VB" in x[1] and x[0].upper() not in stopwords)]
 
                 
-                mentorPref = word_tokenize(mentorPref)
-                mentorPref = nltk.pos_tag(mentorPref)
-                mentorPref = [x[0].upper() for x in mentorPref if "JJ" in x[1] and x[0].upper() not in stopwords]
+            #    mentorPref = word_tokenize(mentorPref)
+            #    mentorPref = nltk.pos_tag(mentorPref)
+            #    mentorPref = [x[0].upper() for x in mentorPref if ("NN" in x[1] and x[0].upper() not in stopwords) or ("VB" in x[1] and x[0].upper() not in stopwords)]
 
-                attributeAdded = False
+            #    attributeAdded = False
                 
-                for x in menteePref:
-                    if len(x) < 3: continue
-                    if x in mentorPref:
-                        score+=0.25
-                        if not attributeAdded: 
-                            attributes+="Mentee/Mentor Other Pref."
-                            attributeAdded = True
+            #    for x in menteePref:
+            #        if len(x) < 3: continue
+            #        if x in mentorPref:
+            #            score+=0.25
+            #            if not attributeAdded: 
+            #                attributes+="Mentee/Mentor Other Pref. KEYWORD FOUND: "+str(x)+"; "
+            #                attributeAdded = True
 
 
             # name, attributes, score
