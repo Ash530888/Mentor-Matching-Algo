@@ -4,8 +4,10 @@ OUPUT: output.xlsx spreadsheet where column names are mentors and all mentees ra
 
 Instructions:
 - Name mentee data and mentor data spreadsheets Mentee_Data.xlsx, Mentor_Data.xlsx respectively
-- Make sure that spreadsheets are in the same folder as executable file
-- NOTE: Very early, beta version so need to manually check decisions made by algo (DO NOT TRUST BLINDLY) - it indicates in output if no match found, and if match found outputs why they were matched
+- Make sure that spreadsheets are in the folder MM_Algo folder
+- Double click MM_ALGO executable file inside MM_Algo folder to run algorithm
+- Progress update messages are printed out on pup-up window
+- NOTE: Very early, beta version so need to manually check decisions made by algo (DO NOT TRUST BLINDLY) - it indicates in output why no match found if that's the case, and if match found outputs why they were matched
 
 
 Dependencies:

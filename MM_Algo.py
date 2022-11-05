@@ -4,18 +4,10 @@ import argparse
 import pandas as pd
 import math
 from Levenshtein import distance
-from job_scraper import find_jobs_from
 import nltk
 nltk.download('punkt')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from SerpAPI_GoogleJobs import google_job_search
-from BS4_Indeed_functional import job_loc_scrape
-
-#from sklearn.feature_extraction.text import CountVectorizer
-#from sklearn.metrics.pairwise import cosine_similarity
-
-
 from csv import reader
 
 
@@ -37,12 +29,6 @@ def compute_jaccard_similarity_score(x, y):
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    #parser.add_argument("--data_filepath", help="Data file path",
-    #                    default="Matching_Template.xlsx") 
-    #parser.add_argument("--mentee_sheet", help="Mentee sheet's name in excel spreadsheet",
-    #                    default="Mentee_data")
-    #parser.add_argument("--mentor_sheet", help="Mentor sheet's name in excel spreadsheet",
-    #                   default="Mentor_data")
 
     parser.add_argument("--mentee_data_filepath", help="Mentee Data file path",
                         default="Mentee_Data.xlsx")
@@ -51,9 +37,6 @@ def main(argv):
 
 
     args = parser.parse_args()
-    #filepath = args.data_filepath
-    #mentee = args.mentee_sheet
-    #mentor = args.mentor_sheet
 
     menteeFile = args.mentee_data_filepath
     mentorFile = args.mentor_data_filepath
@@ -76,7 +59,7 @@ def main(argv):
 
     outputDF = {}
 
-    #print("0% Complete", end = "\r")
+    print("0% Complete", end = "\r")
 
     done = 0
     tot = len(mentorData) * len(menteeData)
@@ -93,8 +76,6 @@ def main(argv):
 
             menteeJobsDict[j] = []
 
-            #print("mentee: ", menteeJob)
-
             if isinstance(menteeJob, str): 
                 if len(menteeJob) != 0:
                     with open('2019_free_title_data.csv', 'r') as read_obj:
@@ -102,12 +83,9 @@ def main(argv):
                         next(csv_reader)
                         for row in csv_reader:
                             row = [r.strip() for r in row]
-                            #print(row)
-                            #input()
                             for job in row:
                                 if len(job) > 2:
                                     if menteeJob.lower() in job or job in menteeJob.lower():
-                                        #menteeJobsDict[j].append(job)
                                         menteeJobsDict[j].append(row)
                                         break
             else:
@@ -118,29 +96,12 @@ def main(argv):
                         next(csv_reader)
                         for row in csv_reader:
                             row = [r.strip() for r in row]
-                            #print(row)
-                            #input()
                             for job in row:
                                 if len(job) > 2:
                                     if x in job or job in x: 
-                                        #print("csv: ",job)
-                                        #input()
-                                        #menteeJobsDict[j].append(job)
                                         menteeJobsDict[j].append(row)
                                         break
                                     
-
-                    #if len(menteeJobsDict[j]) == 0:
-                    #    with open('2019_free_title_data.csv', 'r') as read_obj:
-                     #       csv_reader = reader(read_obj)
-                     #       next(csv_reader)
-                     #       for row in csv_reader:
-                      #          row = [r.strip() for r in row]
-                     #           for job in row:
-                      #              if levenshtein_distance_percentage(x, job) > 0.7:
-                      #                  menteeJobsDict[j] = row
-                      #                  break
-                      #          break
 
     mentorJobsDict = {}
     mentorIndsDict = {}
@@ -169,9 +130,6 @@ def main(argv):
             mentorJobsDict[i] = []
             mentorIndsDict[i] = []
 
-            #print("mentee: ", menteeJob)
-
-            
 
             if isinstance(mentorJob, str): 
                 if len(mentorJob) != 0:
@@ -181,20 +139,12 @@ def main(argv):
                         for row in csv_reader:
                             found = False
                             row = [r.strip() for r in row]
-                            #print(row)
-                            #input()
                             for job in row:
                                 if len(job) > 2:
                                     if mentorJob.lower() in job or job in mentorJob.lower():
                                         mentorJobsDict[i].append(job)
-                                        found = True
-                                        #mentorJobsDict[i].append(row)
                                     if mentorIndustry.lower() in job or job in mentorIndustry.lower():
-                                        found = True
                                         mentorIndsDict[i].append(job)
-                                        #mentorIndsDict[i].append(row)
-                                        
-                                    #if found: break
             else:
                 mentorJob = [x.lower() for x in mentorJob if len(x) > 0]
                 for x in mentorJob:
@@ -204,28 +154,16 @@ def main(argv):
                         for row in csv_reader:
                             found = False
                             row = [r.strip() for r in row]
-                            #print(row)
-                            #input()
                             for job in row:
                                 if len(job) > 2:
                                     if x in job or job in x: 
-                                        #print("csv: ",job)
-                                        #input()
                                         mentorJobsDict[i].append(job)
-                                        #mentorJobsDict[i].append(row)
-                                        found = True
                                     if mentorIndustry in job or job in mentorIndustry: 
-                                        #print("csv: ",job)
-                                        #input()
                                         mentorIndsDict[i].append(job)
-                                        #mentorIndssDict[i].append(row)
-                                        found = True
-                                #if found: break
                                 
         # iterate through mentees
         for j in range(len(menteeData)):
             done+=1
-            #menteeSupport = (menteeData["support"].iloc[j]).split(",")
             score = 0
             attributes = ""
 
@@ -259,25 +197,11 @@ def main(argv):
                             attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+mentorQualifications+"); "
                             found = True
                             break
-
-                        s = levenshtein_distance_percentage(menteeQualifaction, mentorQualifications)
-                        if s>=0.55: 
-                            score+=1
-                            attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+mentorQualifications+"); "
-                            found = True
-                            break
                     else:
                         for menteeq in menteeQualifaction:
                             if menteeq.lower() in stopwords: continue
                             if mentorQualifications.lower() in menteeq.lower() or menteeq.lower() in mentorQualifications.lower():
                                 
-                                score+=1
-                                attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+mentorQualifications+"); "
-                                found = True
-                                break
-
-                            s = levenshtein_distance_percentage(menteeq, mentorQualifications)
-                            if s>=0.55: 
                                 score+=1
                                 attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+mentorQualifications+"); "
                                 found = True
@@ -292,25 +216,11 @@ def main(argv):
                                 attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+q+"); "
                                 found = True
                                 break
-
-                            s = levenshtein_distance_percentage(menteeQualifaction, q)
-                            if s>=0.55: 
-                                score+=1
-                                attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+q+"); "
-                                found = True
-                                break
                         else:
                             for menteeq in menteeQualifaction:
                                 if menteeq.lower() in stopwords: continue
                                 if q.lower() in menteeq.lower() or menteeq.lower() in q.lower():
                                     
-                                    score+=1
-                                    attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+q+"); "
-                                    found = True
-                                    break
-
-                                s = levenshtein_distance_percentage(menteeq, q)
-                                if s>=0.55: 
                                     score+=1
                                     attributes += "Qualifications  (Mentee: "+menteeData["course"].iloc[j]+"), (Mentor: "+q+"); "
                                     found = True
@@ -324,33 +234,19 @@ def main(argv):
             # if mentee wants to be matched based on industry/job
             if menteeData["whichMentor"].iloc[j] == "Option 2 - A mentor who works in the industry/job role that I am interested in":
                 if not isinstance(menteeData["industry/job"].iloc[j], float):
-                    #print("Industry...")
-                    #print("mentee ", menteeData["industry/job"].iloc[j])
                     
                     mentorJob = (mentorData["job"].iloc[i]).lower()
                     mentorIndustry = (mentorData["industry"].iloc[i]).lower()
                     mentorCompany = mentorData["company"].iloc[i]
 
                     found = False
-                    #for row in menteeJobsDict[j]:
-                        #input()
-                        #if (mentorJob in job or job in mentorJob) or (mentorIndustry in job or job in mentorIndustry):
-                            #if x.lower() in job or job in x.lower(): 
 
                     teachingJobs = ["teacher", "instructor","assistant professor", "lecturer", "principle", "teaching assistant"]
 
                     for row in menteeJobsDict[j]:
-                        #print(row)
                         for job in row:
                             if len(job) > 2:
-                                #print("not a match ", job)
                                 if (("teach" in job and row[0] in teachingJobs) or "teach" not in job) and (mentorJob in job or job in mentorJob or mentorIndustry in job or job in mentorIndustry):
-                                #if mentorJob in job or job in mentorJob or mentorIndustry in job or job in mentorIndustry:
-                                    #print("mentee ", menteeData["industry/job"].iloc[j])
-                                   #print("from csv: ",job)
-                                    #print("mentor: ",mentorJob)
-                                   # print(mentorIndustry)
-                                    #input()
                                     score+=2
                                     found = True
                                     attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
@@ -359,90 +255,9 @@ def main(argv):
                     
                     if not found:
                         attributes+= "Job/Industry didn't match Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
-                        #print(menteeJobsDict[j])
-                        #print("mentee ", menteeData["industry/job"].iloc[j])
-                        #print("mentor: ",mentorJob)
-                        #print(mentorIndustry)
-                        #input("NOT FOUND!!")
-
-                    #if (set(menteeJobsDict[j]) & set(mentorJobsDict[i])) or (set(menteeJobsDict[j]) & set(mentorIndsDict[i])):
-                     #   score+=2
-                    #    attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
-                        #print("mentor", mentorJob)
-                        #print("mentor", mentorIndustry)
-                        #print(set(menteeJobsDict[j]) & set(mentorJobsDict[i]))
-                        #print(set(menteeJobsDict[j]) & set(mentorIndsDict[i]))
-                        #input()
-
-                    #for job in menteeJobsDict[j]:
-                    #    if len(job) > 2:
-                    #        print("not a match ", job)
-                    #        if (("teach" in job and row[0] in teachingJobs) or "teach" not in job) and (mentorJob in job or job in mentorJob or mentorIndustry in job or job in mentorIndustry):
-                    #        #if mentorJob in job or job in mentorJob or mentorIndustry in job or job in mentorIndustry:
-                    #            print("mentee ", menteeData["industry/job"].iloc[j])
-                    #            print("from csv: ",job)
-                    #            print("mentor: ",mentorJob)
-                    #            print(mentorIndustry)
-                    #            input()
-                    #            score+=2
-                    #            found = True
-                    #            attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
-                    #            break
-
-                    
-
-                        #if row in  mentorJobsDict[i]:
-                         #   score+=2
-                         ##   attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
-                        #    break
-
-                        #if (levenshtein_distance_percentage(mentorJob, job) > 0.7) or (levenshtein_distance_percentage(mentorIndustry, job) > 0.7):
-                        #    score+=1
-                        #    print("match found j/i")
-                        #    input()
-                        #    attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
-
-
-                    
-
-                            
-
-                    #for x in menteeJob:
-
-                        #jobs = google_job_search(x, "uk", "month")
-                        #jobs = find_jobs_from("Indeed", x, "uk")
-                        #jobs = find_jobs_from("CWjobs", x, "uk")
-
-                        #titles = jobs["job_title"]
-                        #companies = jobs["company_name"]
-
-                        #titles = [t.upper() for t in titles if t not in titles]
-                        #companies = [c.upper() for c in companies if c not in companies]
                         
-                        #if mentorJob.upper() in titles or mentorIndustry.upper() in titles:
-                        #    if mentorCompany in companies: 
-                        #        score+=0.5
-                        #        attributes+= "Relevant Company; "
-                        #    score+=1
-                        #    attributes+= "Job/Industry; "
-                        #    found = True
-                        #    break
 
-                        #if found: break
-
-
-
-                #industry = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["industry"].iloc[i])
-                #job = levenshtein_distance_percentage(menteeData["industry/job"].iloc[j], mentorData["job"].iloc[i])
-
-                #if industry>=0.55: 
-                #    score+=1
-                #    attributes += "Industry; "
-                #if job>=0.55: 
-                #    score+=1
-                #    attributes += "Job; "
-
-            # if mentee interested in entrepreneurship
+            # if mentee interested in entrepreneurship - this option and related sections removed this round
             if menteeData["whichMentor"].iloc[j] == "Option 3 - A mentor who can support with entrepreneurship":
                 if not isinstance(mentorSupport, float):
                     if "Developing entrepreneurial skills" in mentorSupport:
@@ -468,32 +283,34 @@ def main(argv):
 
 
 
-                # entrpreuenal stage and support 
+                # entrpreuenal stage and support
 
-                #if "Developing entrepreneurial skills" in menteeSupport and "Developing entrepreneurial skills" in mentorSupport:
-                #    score+=1
-                #    attributes += "Developing Entrepreneurial Skills; "
+                if "Developing entrepreneurial skills" in menteeSupport and "Developing entrepreneurial skills" in mentorSupport:
+                    score+=1
+                    attributes += "Developing Entrepreneurial Skills; "
 
-                #if "Support with setting up or growing a business" in menteeSupport and "Support with setting up or growing a business" in mentorSupport:
-                #    score+=1
-                #    attributes += "Starting/Growing Business; "
+                if "Support with setting up or growing a business" in menteeSupport and "Support with setting up or growing a business" in mentorSupport:
+                    score+=1
+                    attributes += "Starting/Growing Business; "
                 
-                #if (menteeData["entrepreneurStage"].iloc[j])[6] == "1":
-                #    score+=1
-                #    attributes+="Exploring Entrepreneurship; "
+                if (menteeData["entrepreneurStage"].iloc[j])[6] == "1":
+                    score+=1
+                    attributes+="Exploring Entrepreneurship; "
 
-                #elif (menteeData["entrepreneurStage"].iloc[j])[6] == "2":
-                #    score+=2
-                #    attributes+="Aspiring Entrepreneur with Business Idea; "
+                elif (menteeData["entrepreneurStage"].iloc[j])[6] == "2":
+                    score+=2
+                    attributes+="Aspiring Entrepreneur with Business Idea; "
 
-                #elif (menteeData["entrepreneurStage"].iloc[j])[6] == "3":
-                #    score+=3
-                #    attributes+="Current Entrepreneur; "
+                elif (menteeData["entrepreneurStage"].iloc[j])[6] == "3":
+                    score+=3
+                    attributes+="Current Entrepreneur; "
 
 
             
             
             # compare mentee goals and mentor offerings
+            # section removed this round
+
             #if "Planning for the future and goal setting" in menteeSupport and "Planning for the future and goal setting" in mentorSupport:
             #    score+=1
             #    attributes += "Planning/Setting Goals; "
@@ -553,15 +370,11 @@ def main(argv):
                 menteePref = word_tokenize(menteePref)
                 menteePref = nltk.pos_tag(menteePref)
                 
-                #menteePref = [x[0].upper() for x in menteePref if "VB" in x[1] and x[0].upper() not in stopwords]
                 menteePref = [x[0].upper() for x in menteePref if "JJ" in x[1] and x[0].upper() not in stopwords]
 
-                #print(menteePref)
-                #input()
                 
                 mentorPref = word_tokenize(mentorPref)
                 mentorPref = nltk.pos_tag(mentorPref)
-                #mentorPref = [x[0].upper() for x in mentorPref if "VB" in x[1] and x[0].upper() not in stopwords]
                 mentorPref = [x[0].upper() for x in mentorPref if "JJ" in x[1] and x[0].upper() not in stopwords]
 
                 attributeAdded = False
@@ -574,11 +387,6 @@ def main(argv):
                             attributes+="Mentee/Mentor Other Pref."
                             attributeAdded = True
 
-            #toCompare = [menteePref, mentorPref]
-            #cv = CountVectorizer()
-            #count_matrix = cv.fit_transform(toCompare)
-
-            #match = cosine_similarity(count_matrix)[0][1]
 
             # name, attributes, score
             ranking.append([str(menteeData["fname"].iloc[j]) +" "+ str(menteeData["lname"].iloc[j])+ " "+  str(menteeData["ID"].iloc[j]) , attributes, score])
@@ -586,25 +394,21 @@ def main(argv):
         ranking = sorted(ranking, key=lambda x: x[2], reverse=True)
         
         outputDF[mentorName] = []
-        outputDF["Matching Attributes ",i] = []
-        outputDF["Scores ",i] = []
+        outputDF["Matching Attributes "+str(i)] = []
+        outputDF["Scores "+str(i)] = []
 
         for k in range(len(ranking)):
             outputDF[mentorName].append(ranking[k][0])
-            outputDF["Matching Attributes ",i].append(ranking[k][1])
-            outputDF["Scores ",i].append(ranking[k][2])
+            outputDF["Matching Attributes "+str(i)].append(ranking[k][1])
+            outputDF["Scores "+str(i)].append(ranking[k][2])
 
-        #print(str((done/tot)*100)+"% Complete", end = "\r")
-
-
+        print(str(int((done/tot)*100))+"% Complete", end = "\r")
 
 
-            
+    print("100% Complete")
+    print("output.xlsx generated!")
 
-
-    
     matches = pd.DataFrame(outputDF)
-    print(matches)
     matches.to_excel("output.xlsx") 
 
 if __name__=="__main__":
