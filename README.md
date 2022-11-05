@@ -13,8 +13,6 @@ Instructions:
 Dependencies:
 - [to do]
 
-Decisions:
-- Using the Levenshtein similarity method to compare values typed in by mentees or mentors.
 
 To Improve: 
 - Smarter analysis/comparison of qualifications and job/industry - very naive approach currently used where:
