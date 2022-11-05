@@ -19,5 +19,7 @@ Decisions:
 To Improve: 
 - Smarter analysis/comparison of qualifications and job/industry - very naive approach currently used where:
     - job/industy: match keywords from limited dataset
+        - tried web scraping to find related roles and compare mentee and mentor jobs but realised this would be unreliable since html structure of                 websites likely to change
     - qualifications: look for shared words between mentor and mentee qualifications
+    
 
