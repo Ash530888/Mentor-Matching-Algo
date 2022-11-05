@@ -1,6 +1,7 @@
 # Mentor-Matching-Algo BETA
 Developing an in-house mentor matching algorithm for Queen Mary University of London's mentoring programme QMentoring.
 OUPUT: output.xlsx spreadsheet where column names are mentors and all mentees ranked from highest compatibility to lowest for each.
+Compatibility calculated by considering preferred gender of mentor/mentee, QMUL School/Department, and either job/industry or qualifications.
 
 Instructions:
 - Name mentee data and mentor data spreadsheets Mentee_Data.xlsx, Mentor_Data.xlsx respectively
@@ -15,9 +16,10 @@ Dependencies:
 
 
 To Improve: 
-- Smarter analysis/comparison of qualifications and job/industry - very naive approach currently used where:
+- Smarter analysis/comparison of qualifications and job/industry - very naive approaches currently used where:
     - job/industy: match keywords from limited dataset
-        - tried web scraping to find related roles and compare mentee and mentor jobs but realised this would be unreliable since html structure of                 websites likely to change
-    - qualifications: look for shared words between mentor and mentee qualifications
+        - tried web scraping to find related roles and compare mentee and mentor jobs but realised this would be unreliable since html structure of                 websites likely to change.
+    - qualifications: look for shared words between mentor and mentee qualifications.
+- Use Natural Language Processing (e.g. Python's nltk) to analyse mentor and mentee typed in descriptions/answers.
     
 
