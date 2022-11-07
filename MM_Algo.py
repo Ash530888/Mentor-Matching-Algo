@@ -38,14 +38,14 @@ def main(argv):
 
 
     # Read excel sheets with 
-    columns = [3, 4, 6, 8, 10, 11, 17, 18, 29, 30, 32, 33, 34, 39, 40, 41]
-    colNames = ["fname", "lname", "ID", "course", "dept", "faculty", "nationality", "gender", "bursary", "matchPref", "industry/job", "otherGender", "entrepreneurStage", "support", "mentorGender", "whichMentor"]
+    columns = [1, 2, 5, 6, 8, 7, 9, 14, 15, 16, 17, 18]
+    colNames = ["fname", "lname", "ID", "gender", "dept", "faculty", "course", "whichMentor", "industry/job", "mentorGender", "otherGender", "matchPref"]
     #menteeData = pd.read_excel(filepath, sheet_name = mentee, header = None, names = columns)
     menteeData = pd.read_excel(menteeFile, header = None, usecols = columns, names = colNames)
     menteeData.drop(index=menteeData.index[0], axis=0, inplace=True)
 
-    columns = [0, 4, 5, 7, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24]
-    colNames = ["name", "gender", "otherGender", "qualifications", "ethnicitiy", "otherEthnic", "menteeGender", "otherMenteeGender", "QMULschool", "matchPref", "job", "company", "industry", "support", "otherSupport", "extraInfo"]
+    columns = [0, 1, 6, 7, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 22]
+    colNames = ["fname", "lname", "gender", "otherGender", "qualifications", "ethnicitiy", "otherEthnic", "menteeGender", "otherMenteeGender", "QMULschool", "matchPref", "job", "company", "industry", "extraInfo"]
     #mentorData = pd.read_excel(filepath, sheet_name = mentor, header = None, names = columns)
     mentorData = pd.read_excel(mentorFile, header = None, usecols = columns, names = colNames)
     mentorData.drop(index=mentorData.index[0], axis=0, inplace=True)
@@ -105,11 +105,11 @@ def main(argv):
     for i in range(len(mentorData)):
         done+=1
 
-        mentorName = mentorData["name"].iloc[i]
+        mentorName = str(mentorData["fname"].iloc[i])+" "+str(mentorData["lname"].iloc[i])
         columns.append(mentorName)
         columns.append("Matching Attributes")
 
-        mentorSupport = mentorData["support"].iloc[i].split(",")
+        #mentorSupport = mentorData["support"].iloc[i].split(",")
 
         ranking = []
 
@@ -151,9 +151,9 @@ def main(argv):
                             row = [r.strip() for r in row]
                             for job in row:
                                 if len(job) > 2:
-                                    if x in job or job in x: 
+                                    if not isinstance(x, float) and (x in job or job in x): 
                                         mentorJobsDict[i].append(job)
-                                    if mentorIndustry in job or job in mentorIndustry: 
+                                    if not isinstance(mentorIndustry, float) and (mentorIndustry in job or job in mentorIndustry): 
                                         mentorIndsDict[i].append(job)
                                 
         # iterate through mentees
@@ -231,7 +231,8 @@ def main(argv):
                 if not isinstance(menteeData["industry/job"].iloc[j], float):
                     
                     mentorJob = (mentorData["job"].iloc[i]).lower()
-                    mentorIndustry = (mentorData["industry"].iloc[i]).lower()
+                    mentorIndustry = (mentorData["industry"].iloc[i])
+                    if not isinstance(mentorIndustry, float): mentorIndustry = mentorIndustry.lower()
                     mentorCompany = mentorData["company"].iloc[i]
 
                     found = False
@@ -241,15 +242,23 @@ def main(argv):
                     for row in menteeJobsDict[j]:
                         for job in row:
                             if len(job) > 2:
-                                if (("teach" in job and row[0] in teachingJobs) or "teach" not in job) and (mentorJob in job or job in mentorJob or mentorIndustry in job or job in mentorIndustry):
+                                if (("teach" in job and row[0] in teachingJobs) or "teach" not in job) and (mentorJob in job or job in mentorJob):
                                     score+=2
                                     found = True
-                                    attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
+                                    attributes+= "Job Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"); "
                                     break
+                                if not isinstance(mentorIndustry, float):
+                                    if mentorIndustry in job or job in mentorIndustry:
+                                        score+=2
+                                        found = True
+                                        attributes+= "Job/Industry Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
+                                        break
+
                         if found: break
                     
-                    if not found:
-                        attributes+= "Job/Industry didn't match Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
+                    if not found and isinstance(mentorIndustry, float):
+                        attributes+= "Job/Industry didn't match Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"); "
+                    elif not isinstance(mentorIndustry, float): attributes+= "Job/Industry didn't match Mentee("+menteeData["industry/job"].iloc[j]+"), Mentor("+mentorJob+"/"+mentorIndustry+"); "
                         
 
             # if mentee interested in entrepreneurship - this option and related sections removed this round
@@ -268,7 +277,7 @@ def main(argv):
                 keywords = {"sale" : "sale; ", "market" : "market; ", "business" : "business; ", "financ" : "finance; ", "manag" : "management; ", "ceo" : "CEO; ", "cfo" : "CFO; ", "entrepreneur" : "entrepreneur; ", "sell" : "sell; ", "produc" : "production; ", "build" : "build; ", "organise" : "organise; ", "present" : "present; ", "start-up" : "start-up; ", "start up" : "start-up; ", "venture" : "venture; ", "profit" : "profit;", "invest" : "invest; ", "incubat" : "incubate; ", "network" : "network; ", "patent" : "patent; ", "trademark" : "trademark; ", "launch" : "launch; ", "pitch" : "pitch; ", "associate" : "associate; ", "partner" : "partner; ", "capital" : "capital; ", "acqui" : "acquisition; ", "advertis" : "advertisement; "}
 
                 mentorJob = (mentorData["job"].iloc[i]).lower()
-                mentorIndustry = (mentorData["industry"].iloc[i]).lower()
+                if not isinstance(mentorIndustry, float): mentorIndustry = (mentorData["industry"].iloc[i]).lower()
                 extra = (mentorData["extraInfo"].iloc[i]).lower()
 
                 for kw in keywords:
@@ -328,33 +337,35 @@ def main(argv):
 
 
             # check mentor and mentee gender preferences
-            if menteeData["mentorGender"].iloc[j] != "No preference" and  mentorData["menteeGender"].iloc[i] != "No preference":
-                if menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i] and menteeData["gender"].iloc[j] == (mentorData["menteeGender"].iloc[i])[0].upper():
-                    score+=0.25
-                    attributes += "Both Mentee and Mentor Gender Pref. Met; "
-                elif menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i]:
-                    score+=0.15
-                    attributes += "Only Mentee Gender Pref. Met; "
-                elif menteeData["gender"].iloc[j] == (mentorData["menteeGender"].iloc[i])[0].upper():
-                    score+=0.15
-                    attributes += "Only Mentor Gender Pref. Met; "
-            else:
-                if mentorData["menteeGender"].iloc[i] == "No preference" and menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i]:
-                    score+=0.25
-                    attributes += "Mentee Gender Pref. Met; "
-                elif menteeData["mentorGender"].iloc[j] == "No preference" and menteeData["gender"].iloc[j] == (mentorData["menteeGender"].iloc[i])[0].upper():
-                    score+=0.25
-                    attributes += "Mentor Gender Pref. Met; "
+            if not isinstance(menteeData["gender"].iloc[j], float) and not isinstance(mentorData["menteeGender"].iloc[i], float):
+                if menteeData["mentorGender"].iloc[j] != "No preference" and  mentorData["menteeGender"].iloc[i] != "No preference":
+                    if menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i] and menteeData["gender"].iloc[j] == (mentorData["menteeGender"].iloc[i])[0].upper():
+                        score+=0.25
+                        attributes += "Both Mentee and Mentor Gender Pref. Met; "
+                    elif menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i]:
+                        score+=0.15
+                        attributes += "Only Mentee Gender Pref. Met; "
+                    elif menteeData["gender"].iloc[j] == (mentorData["menteeGender"].iloc[i])[0].upper():
+                        score+=0.15
+                        attributes += "Only Mentor Gender Pref. Met; "
+                else:
+                    if mentorData["menteeGender"].iloc[i] == "No preference" and menteeData["mentorGender"].iloc[j] == mentorData["gender"].iloc[i]:
+                        score+=0.25
+                        attributes += "Mentee Gender Pref. Met; "
+                    elif menteeData["mentorGender"].iloc[j] == "No preference" and menteeData["gender"].iloc[j] == (mentorData["menteeGender"].iloc[i])[0].upper():
+                        score+=0.25
+                        attributes += "Mentor Gender Pref. Met; "
 
 
             # check QMUL School
-            if mentorData["QMULschool"].iloc[i] != "No preference":
-                mentorSchools = (mentorData["QMULschool"].iloc[i]).split(",")
+            if not isinstance(menteeData["dept"].iloc[j], float) and not isinstance(mentorData["QMULschool"].iloc[i], float):
+                if mentorData["QMULschool"].iloc[i] != "No preference":
+                    mentorSchools = (mentorData["QMULschool"].iloc[i]).split(",")
 
-                for s in mentorSchools:
-                    if s in menteeData["dept"].iloc[j]: 
-                        score+=1
-                        attributes+="QMUL School; "
+                    for s in mentorSchools:
+                        if s in menteeData["dept"].iloc[j]: 
+                            score+=1
+                            attributes+="QMUL School; "
 
             # Compare Mentor's and Mentee's additional match preferences
             menteePref = menteeData["matchPref"].iloc[j]
