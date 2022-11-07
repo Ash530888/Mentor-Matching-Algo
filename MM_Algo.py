@@ -400,11 +400,14 @@ def main(argv):
         print(str(int((done/tot)*100))+"% Complete", end = "\r")
 
 
-    print("100% Complete")
-    print("output.xlsx generated!")
+    
 
     matches = pd.DataFrame(outputDF)
     matches.to_excel("output.xlsx") 
+
+    print("100% Complete")
+    print("output.xlsx generated!")
+    input("Press enter to close window ")
 
 if __name__=="__main__":
     main(sys.argv)
